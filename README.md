@@ -35,12 +35,12 @@ endif
 * You have to handle errors carefully. In no way can your function leads to undefined behaviour or segv.
 
 * Within the mandatory part, you are allowed to use the following functions:
-** mmap(2)
-** munmap(2)
-** getpagesize under OSX or sysconf(_SC_PAGESIZE) under linux
-** getrlimit(2)
-** The authorized functions within your libft (write(2) for exemple ;-) )
-** The functions from libpthread
+	* mmap(2)
+	* munmap(2)
+	* getpagesize under OSX or sysconf(_SC_PAGESIZE) under linux
+	* getrlimit(2)
+	* The authorized functions within your libft (write(2) for exemple ;-) )
+	* The functions from libpthread
 
 * You are allowed to use other functions to complete the bonus part as long as their use is justified during your defence. Be smart!
 
@@ -59,28 +59,28 @@ void *malloc(size_t size);
 void *realloc(void *ptr, size_t size);
 ```
 
-• The malloc() function allocates “size” bytes of memory and returns a pointer to the allocated memory.
+The malloc() function allocates “size” bytes of memory and returns a pointer to the allocated memory.
 
-• The realloc() function tries to change the size of the allocation pointed to by “ptr” to “size”, and returns “ptr”. If there is not enough room to enlarge the memory allocation pointed to by ptr, realloc() creates a new allocation, copies as much of the old data pointed to by “ptr” as will fit to the new allocation, frees the old allocation, and returns a pointer to the allocated memory.
+The realloc() function tries to change the size of the allocation pointed to by “ptr” to “size”, and returns “ptr”. If there is not enough room to enlarge the memory allocation pointed to by ptr, realloc() creates a new allocation, copies as much of the old data pointed to by “ptr” as will fit to the new allocation, frees the old allocation, and returns a pointer to the allocated memory.
 
-• The free() function deallocates the memory allocation pointed to by ptr. If ptr is a NULL pointer, no operation is performed.
+The free() function deallocates the memory allocation pointed to by ptr. If ptr is a NULL pointer, no operation is performed.
 
-• If there is an error, the malloc() and realloc() functions return a NULL pointer.
+If there is an error, the malloc() and realloc() functions return a NULL pointer.
 
-• You must use the mmap(2) and munmap(2) syscall to claim and return the memory zones to the system.
+You must use the mmap(2) and munmap(2) syscall to claim and return the memory zones to the system.
 
-• You must manage your own memory allocations for the internal functioning of your project without using the libc malloc function.
+You must manage your own memory allocations for the internal functioning of your project without using the libc malloc function.
 
-• With performance in mind, you must limit the number of calls to mmap(), but also to munmap(). You have to “pre-allocate” some memory zones to store your “small” and “medium” malloc.
+With performance in mind, you must limit the number of calls to mmap(), but also to munmap(). You have to “pre-allocate” some memory zones to store your “small” and “medium” malloc.
 
-• The size of these zones must be a multiple of getpagesize() under osX or sysconf(_SC_PAGESIZE) under linux.
+The size of these zones must be a multiple of getpagesize() under osX or sysconf(_SC_PAGESIZE) under linux.
 
 • Each zone must contain at least 100 allocations.
 * “TINY” mallocs, from 1 to n bytes, will be stored in N bytes big zones.
 * “SMALL” mallocs, from (n+1) to m bytes, will be stored in M bytes big zones.
 * “LARGE” mallocs, fron (m+1) bytes and more, will be stored out of zone, which simply means with mmap(), they will be in a zone on their own.
 
-• It’s up to you to define the size of n, m, N and M so that you find a good compromise between speed (saving on system recall) and saving memory.
+It’s up to you to define the size of n, m, N and M so that you find a good compromise between speed (saving on system recall) and saving memory.
 
 You also must write a function that allows visual on the state of the allocated memory zones. It needs to be prototyped as follows:
 
