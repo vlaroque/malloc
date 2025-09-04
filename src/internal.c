@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <unistd.h>
+#include "internal.h"
 
 size_t get_page_size(void)
 {

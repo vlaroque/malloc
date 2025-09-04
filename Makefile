@@ -37,7 +37,8 @@ SRC = malloc.c \
 	zone.c\
 	block.c\
 	show_allocated_memory.c\
-	internal.c
+	internal.c\
+	debug.c
 SRC_DIR = src
 
 # Headers

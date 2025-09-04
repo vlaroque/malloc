@@ -1,51 +1,76 @@
 #include "libft_malloc.h"
 #include <stddef.h>
+#include <libft.h>
 #include "zone.h"
+#include "block.h"
 #include "internal.h"
-#include <assert.h>
-#include <unistd.h>
-#include <string.h>
 
-static void to_stdout(char *str)
-{
-	assert(str != NULL);
-
-	ssize_t ignored = write(STDOUT_FILENO, str, strlen(str));
-	ignored = write(STDERR_FILENO, str, strlen(str));
-	(void)ignored;
-}
 
 void *malloc(size_t size)
 {
-	to_stdout("entering malloc\n");
+	void *ret = NULL;
 
-	size = ALIGN(size);
+	if ( size == 0 )
+		return ret;
 
 	if ( size <= MAX_TINY_SIZE )
-		return allocate_in_zone_array(size, TINY);
+	{
+		ret = allocate_in_zone_array(size, TINY);
+	}
 	else if ( size <= MAX_SMALL_SIZE )
-		return allocate_in_zone_array(size, SMALL);
+	{
+		ret = allocate_in_zone_array(size, SMALL);
+	}
 	else
-		return allocate_in_zone_array(size, LARGE);
+	{
+		ret = allocate_in_zone_array(size, LARGE);
+	}
 
-	return NULL;
+	return ret;
 }
 
 void free(void *ptr)
 {
-	(ptr += 1);
+	deallocate_block( (mem_block_t*)((buff_t)ptr - BLOCK_HEADER_SIZE ) );
 	return;
 }
 
 void *realloc(void *ptr, size_t size)
 {
+	if ( ptr == NULL)
+	{
+		return malloc(size);
+	}
+
 	if ( size == 0 )
+	{
 		free(ptr);
+		return NULL;
+	}
+
+	mem_block_t *block = (mem_block_t *)((buff_t)ptr - BLOCK_HEADER_SIZE);
+	size = ALIGN(size);
+
+	if (block->user_data_size >= size )
+	{
+		return ptr;
+	}
+
+	void *new_ptr = malloc(size);
+
+	if (new_ptr == NULL)
+		return new_ptr;
+
+	ft_memcpy(new_ptr, ptr, block->requested_size);
+
+	free(ptr);
 
 	return NULL;
 }
 
 void show_alloc_mem(void)
 {
+	dump_memory();
+
 	return;
 }
