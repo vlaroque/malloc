@@ -38,6 +38,7 @@ SRC = malloc.c \
 	block.c\
 	show_allocated_memory.c\
 	internal.c\
+	printing.c\
 	debug.c
 SRC_DIR = src
 

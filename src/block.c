@@ -104,7 +104,7 @@ mem_block_t *find_in_zone_block_big_enough(mem_zone_t *zone, size_t block_data_s
 	assert(zone != NULL);
 
 	/* first block is always init, at least empty */
-	mem_block_t *cur_block = zone->fist_block;
+	mem_block_t *cur_block = zone->first_block;
 
 	while ( cur_block )
 	{

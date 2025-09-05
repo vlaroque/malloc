@@ -1,11 +1,9 @@
 #include "internal.h"
 #include "zone.h"
 #include "block.h"
+#include "printing.h"
 #include <sys/mman.h>
 #include <assert.h>
-
-
-
 
 memory_zones_t g_malloc_zones = { NULL };
 /* End of globals */
@@ -40,26 +38,26 @@ mem_zone_t *new_memory_zone(size_t mem_size, zone_type_t zone_type)
 
 	if ( mem == MAP_FAILED )
 	{
-		to_stdout("ERROR MMAP\n");
+		str_out("ERROR MMAP\n");
 		return NULL;
 	}
 
 	mem_zone_t *new_zone = (mem_zone_t *) mem;
 
-	new_zone->fist_block     = (mem_block_t *)((buff_t)new_zone + ZONE_HEADER_SIZE);
-	new_zone->last_block     = new_zone->fist_block;
+	new_zone->first_block    = (mem_block_t *)((buff_t)new_zone + ZONE_HEADER_SIZE);
+	new_zone->last_block     = new_zone->first_block;
 	new_zone->zone_data_size = data_size;
 	new_zone->free_data_size = data_size - ZONE_HEADER_SIZE; /* TODO maybe remove it */
 	new_zone->total_size     = total_size; /* TODO maybe remove it */
 	new_zone->allocations_count = 0;
 	new_zone->type           = zone_type;
 
-	first_empty_block(new_zone, new_zone->fist_block, new_zone->free_data_size - BLOCK_HEADER_SIZE);
+	first_empty_block(new_zone, new_zone->first_block, new_zone->free_data_size - BLOCK_HEADER_SIZE);
 
 	return new_zone;
 }
 
-static mem_zone_t **_get_zone_by_type(zone_type_t zone_type)
+mem_zone_t **_get_zone_by_type(zone_type_t zone_type)
 {
 	if (zone_type == TINY )
 		return &g_malloc_zones.tiny_zones;
@@ -100,7 +98,7 @@ void *allocate_in_zone_array(size_t requested_size, zone_type_t zone_type)
 	{
 		size_t         zone_size     = _get_zone_size_by_type(zone_type, aligned_requested_size);
 		mem_zone_t    *new_zone      = new_memory_zone(zone_size, zone_type);
-		void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->fist_block, requested_size, aligned_requested_size);
+		void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->first_block, requested_size, aligned_requested_size);
 
 		*mem_zone_ptr = new_zone;
 
@@ -122,10 +120,10 @@ void *allocate_in_zone_array(size_t requested_size, zone_type_t zone_type)
 			/* code dupliqué à mettre à jour */
 			size_t         zone_size     = _get_zone_size_by_type(zone_type, aligned_requested_size);
 			mem_zone_t    *new_zone      = new_memory_zone(zone_size, zone_type);
-			void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->fist_block, requested_size, aligned_requested_size);
+			void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->first_block, requested_size, aligned_requested_size);
 
-			zone->next   = new_zone;
-			new_zone->prev          = zone;
+			zone->next       = new_zone;
+			new_zone->prev   = zone;
 
 			return user_data_ptr;
 		}
@@ -167,12 +165,3 @@ memory_zones_t *get_all_zones()
 {
 	return &g_malloc_zones;
 }
-
-
-/*
-void clear_memory_zone(mem_zone_t mem_zone)
-{
-	zone_type_t type = mem_zone;
-}
-*/
-

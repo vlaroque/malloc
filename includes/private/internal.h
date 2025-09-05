@@ -69,7 +69,7 @@ typedef struct zone_header_s
 {
 	zone_header_t *prev;
 	zone_header_t *next;
-	mem_block_t   *fist_block;
+	mem_block_t   *first_block;
 	mem_block_t   *last_block;
 	size_t         zone_data_size;       /*!< the size used for the blocks inside */
 	size_t         free_data_size;       /*!< the size free space for blocks inside the zone */
@@ -88,9 +88,7 @@ typedef zone_header_t          mem_zone_t;
 
 size_t get_page_size(void);
 size_t make_page_size_multiple(size_t size);
-void to_stdout(char *str);
-void tiny_putnbr(int n);
-void tiny_puthex(unsigned long n);
+void puthex_out(unsigned long n);
 void dump_block(mem_block_t *block);
 void dump_zone(mem_zone_t *zone);
 void dump_memory();
