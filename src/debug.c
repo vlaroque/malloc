@@ -69,13 +69,16 @@ void dump_zone(mem_zone_t *zone)
 	else if (zone->type == LARGE)
 		str_out("LARGE");
 	str_out("}\n");
+	
+	str_out(COLOR_WHITE "█ " COLOR_YELLOW_BOLD "█\n");
+
 
 	mem_block_t *block = zone->first_block;
 
 	int i = 0;
 	while ( block != NULL )
 	{
-		str_out(COLOR_YELLOW "▓▓ BLOCK ");
+		str_out(COLOR_WHITE "█ " COLOR_YELLOW_BOLD "█ " COLOR_YELLOW "▓▓ BLOCK ");
 		putnbr_out(i);
 		str_out(" ▓▓ " COLOR_RESET );
 		dump_block(block);
@@ -242,8 +245,7 @@ void dump_zone_list(mem_zone_t *zone)
 	int i = 0;
 	while (zone != NULL)
 	{
-		str_out("\n" COLOR_YELLOW_BOLD "██ ");
-		str_out("ZONE ");
+		str_out("\n" COLOR_WHITE "█ " COLOR_YELLOW_BOLD "██ ZONE ");
 		putnbr_out(i);
 		str_out(" ██" COLOR_RESET);
 		dump_zone(zone);
@@ -253,7 +255,7 @@ void dump_zone_list(mem_zone_t *zone)
 	}
 }
 
-void dump_memory()
+void pretty_dump_memory()
 {
 	static bool dump = true;
 
@@ -266,7 +268,7 @@ void dump_memory()
 	str_out(COLOR_BLUE_BOLD "\n████████████████████████████████████████████████████████████████████████████████\n" COLOR_RESET);
 
 	memory_zones_t *zones = get_all_zones();
-	str_out("████ TINY ZONES ████\n");
+	str_out("████ TINY ZONES ████\n" COLOR_WHITE "█");
 	dump_zone_list(zones->tiny_zones);
 	str_out("\n████ SMALL ZONES ████\n");
 	dump_zone_list(zones->small_zones);
@@ -274,3 +276,71 @@ void dump_memory()
 	dump_zone_list(zones->large_zones);
 }
 
+size_t basic_block_dump(mem_block_t *block)
+{
+	size_t block_size = block->user_data_size + BLOCK_HEADER_SIZE;
+	putptr_out((buff_t*)block->user_data);
+	str_out(" - ");
+	putptr_out(((buff_t*)block) + block_size );
+	str_out(" : ");
+	putnbr_out((int)block->user_data_size);
+	str_out(" bytes\n");
+
+	return block->user_data_size;
+}
+
+size_t basic_zone_dump(mem_zone_t *zone)
+{
+	size_t total_size = 0;
+
+	if ( zone->type == TINY )
+		str_out("TINY : ");
+	else if ( zone->type == SMALL )
+		str_out("SMALL : ");
+	else
+		str_out("LARGE : ");
+
+	putptr_out((buff_t*)zone);
+
+	str_out("\n");
+
+	mem_block_t *block = zone->first_block;
+	while (block)
+	{
+		if (block->state != BLOCK_STATE_EMPTY)
+		{
+			total_size += basic_block_dump(block);
+		}
+
+		block = block->next;
+	}
+
+	return total_size;
+}
+
+size_t basic_zones_dump(mem_zone_t *head_zone)
+{
+	mem_zone_t *zone = head_zone;
+	size_t total_size = 0;
+
+	while( zone )
+	{
+		total_size += basic_zone_dump(zone);
+		zone = zone->next;
+	}
+	return total_size;
+}
+
+void dump_memory()
+{
+	size_t total_size = 0;
+
+	memory_zones_t *zones = get_all_zones();
+	total_size += basic_zones_dump(zones->tiny_zones);
+	total_size += basic_zones_dump(zones->small_zones);
+	total_size += basic_zones_dump(zones->large_zones);
+	str_out("Total : ");
+	putnbr_out(total_size);
+	str_out(" bytes\n");
+
+}

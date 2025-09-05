@@ -22,6 +22,35 @@ size_t mem_zone_get_size(mem_zone_t *zone)
 	return( zone->zone_data_size + ZONE_HEADER_SIZE );
 }
 
+mem_zone_t **_get_zone_by_type(zone_type_t zone_type)
+{
+	if (zone_type == TINY )
+		return &g_malloc_zones.tiny_zones;
+	else if (zone_type == SMALL )
+		return &g_malloc_zones.small_zones;
+	else if (zone_type == LARGE )
+		return &g_malloc_zones.large_zones;
+	else
+		return NULL;
+}
+
+size_t _get_zone_size_by_type(zone_type_t zone_type, size_t data_size)
+{
+	switch ( zone_type )
+	{
+		case TINY:
+			return TINY_ZONE_SIZE;
+			break;
+		case SMALL:
+			return SMALL_ZONE_SIZE;
+			break;
+		case LARGE:
+			return ( ZONE_HEADER_SIZE + BLOCK_HEADER_SIZE + ALIGN(data_size) );
+	}
+
+	return 0;
+}
+
 /*!
  * \brief allocate a new momory zone for containing at least size memory
  *
@@ -44,94 +73,54 @@ mem_zone_t *new_memory_zone(size_t mem_size, zone_type_t zone_type)
 
 	mem_zone_t *new_zone = (mem_zone_t *) mem;
 
-	new_zone->first_block    = (mem_block_t *)((buff_t)new_zone + ZONE_HEADER_SIZE);
-	new_zone->last_block     = new_zone->first_block;
-	new_zone->zone_data_size = data_size;
-	new_zone->free_data_size = data_size - ZONE_HEADER_SIZE; /* TODO maybe remove it */
-	new_zone->total_size     = total_size; /* TODO maybe remove it */
+	new_zone->first_block       = (mem_block_t *)((buff_t)new_zone + ZONE_HEADER_SIZE);
+	new_zone->last_block        = new_zone->first_block;
+	new_zone->zone_data_size    = data_size;
+	new_zone->free_data_size    = data_size - ZONE_HEADER_SIZE; /* TODO maybe remove it */
+	new_zone->total_size        = total_size; /* TODO maybe remove it */
 	new_zone->allocations_count = 0;
-	new_zone->type           = zone_type;
+	new_zone->type              = zone_type;
+	new_zone->prev              = NULL;
+	new_zone->next              = NULL;
 
-	first_empty_block(new_zone, new_zone->first_block, new_zone->free_data_size - BLOCK_HEADER_SIZE);
+	init_block(new_zone,
+	           new_zone->first_block,
+	           NULL,
+	           NULL,
+	           new_zone->free_data_size - BLOCK_HEADER_SIZE,
+	           new_zone->free_data_size - BLOCK_HEADER_SIZE,
+	           BLOCK_STATE_EMPTY);
 
+	mem_zone_t **mem_zone_ptr     = _get_zone_by_type(zone_type);
+
+	if ( *mem_zone_ptr == NULL )
+		*mem_zone_ptr = new_zone;
+	else
+	{
+		mem_zone_t *zone = *mem_zone_ptr;
+		while ( zone )
+		{
+			if ( zone->next == NULL)
+			{
+				zone->next      = new_zone;
+				new_zone->prev  = zone;
+				break;
+			}
+			zone = zone->next;
+		}
+	}
 	return new_zone;
 }
 
-mem_zone_t **_get_zone_by_type(zone_type_t zone_type)
+void *zone_init(zone_type_t zone_type, size_t requested_size, size_t aligned_requested_size)
 {
-	if (zone_type == TINY )
-		return &g_malloc_zones.tiny_zones;
-	else if (zone_type == SMALL )
-		return &g_malloc_zones.small_zones;
-	else if (zone_type == LARGE )
-		return &g_malloc_zones.large_zones;
-	else
-		return NULL;
-}
+	size_t      zone_size = _get_zone_size_by_type(zone_type, aligned_requested_size);
+	mem_zone_t *new_zone  = new_memory_zone(zone_size, zone_type);
 
-static size_t _get_zone_size_by_type(zone_type_t zone_type, size_t data_size)
-{
-	switch ( zone_type )
-	{
-		case TINY:
-			return TINY_ZONE_SIZE;
-			break;
-		case SMALL:
-			return SMALL_ZONE_SIZE;
-			break;
-		case LARGE:
-			return ( ZONE_HEADER_SIZE + BLOCK_HEADER_SIZE + ALIGN(data_size) );
-	}
-
-	return 0;
-}
-
-void *allocate_in_zone_array(size_t requested_size, zone_type_t zone_type)
-{
-	mem_zone_t **mem_zone_ptr     = _get_zone_by_type(zone_type);
-	size_t aligned_requested_size = ALIGN(requested_size);
-
-	if ( mem_zone_ptr == NULL )
+	if ( new_zone == NULL )
 		return NULL;
 
-	if ( *mem_zone_ptr == NULL )
-	{
-		size_t         zone_size     = _get_zone_size_by_type(zone_type, aligned_requested_size);
-		mem_zone_t    *new_zone      = new_memory_zone(zone_size, zone_type);
-		void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->first_block, requested_size, aligned_requested_size);
-
-		*mem_zone_ptr = new_zone;
-
-		return user_data_ptr;
-	}
-
-	mem_zone_t *zone = *mem_zone_ptr;
-	while ( zone )
-	{
-		mem_block_t *empty_block = find_in_zone_block_big_enough(zone, aligned_requested_size);
-
-		if ( empty_block != NULL)
-		{
-			return occupy_empty_block(zone, empty_block, requested_size, aligned_requested_size);
-		}
-
-		if ( zone->next == NULL )
-		{
-			/* code dupliqué à mettre à jour */
-			size_t         zone_size     = _get_zone_size_by_type(zone_type, aligned_requested_size);
-			mem_zone_t    *new_zone      = new_memory_zone(zone_size, zone_type);
-			void          *user_data_ptr = occupy_empty_block(new_zone, new_zone->first_block, requested_size, aligned_requested_size);
-
-			zone->next       = new_zone;
-			new_zone->prev   = zone;
-
-			return user_data_ptr;
-		}
-
-		zone = zone->next;
-	}
-
-	return NULL;
+	return occupy_empty_block(new_zone, new_zone->first_block, requested_size, aligned_requested_size);
 }
 
 void del_memory_zone(mem_zone_t *mem_zone)

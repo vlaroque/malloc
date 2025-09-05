@@ -25,20 +25,12 @@ void *init_block(mem_zone_t    *zone,
                  size_t         user_data_size,
                  block_state_t  state);
 
-/*!
- * \brief initiate a new empty block at location
- *
- * \param[in] zone the zone where the block is allocated
- * \param[in] location is the pointer to where initiate de empty block
- * \param[in] data_size is the size of the data of the block, not the entire size of it
- */
-void first_empty_block(mem_zone_t *zone, mem_block_t *block_to_init, size_t data_size);
 
 mem_block_t *find_in_zone_block_big_enough(mem_zone_t *zone, size_t block_data_size);
 
 void *occupy_empty_block(mem_zone_t *zone, mem_block_t *empty_block, size_t requested_size, size_t block_data_size);
 
-void deallocate_block(mem_block_t *block);
+void block_deallocate(mem_block_t *block);
 
 
 #endif /* BLOCK_H */

@@ -4,34 +4,43 @@
 #include "zone.h"
 #include "block.h"
 #include "internal.h"
+#include <pthread.h>
 
+static pthread_mutex_t malloc_lock = PTHREAD_MUTEX_INITIALIZER;
+
+zone_type_t get_zone_type_from_size(size_t size)
+{
+	if ( size <= MAX_TINY_SIZE )
+		return TINY;
+	else if ( size <= MAX_SMALL_SIZE )
+		return SMALL;
+	else
+		return LARGE;
+}
 
 void *malloc(size_t size)
 {
 	void *ret = NULL;
 
 	if ( size == 0 )
-		return ret;
+		return NULL;
 
-	if ( size <= MAX_TINY_SIZE )
-	{
-		ret = allocate_in_zone_array(size, TINY);
-	}
-	else if ( size <= MAX_SMALL_SIZE )
-	{
-		ret = allocate_in_zone_array(size, SMALL);
-	}
-	else
-	{
-		ret = allocate_in_zone_array(size, LARGE);
-	}
+	pthread_mutex_lock(&malloc_lock);
+	ret = block_allocate(size, get_zone_type_from_size(size));
+	pthread_mutex_unlock(&malloc_lock);
 
 	return ret;
 }
 
 void free(void *ptr)
 {
-	deallocate_block( (mem_block_t*)((buff_t)ptr - BLOCK_HEADER_SIZE ) );
+	if (ptr == NULL)
+		return;
+
+	pthread_mutex_lock(&malloc_lock);
+	block_deallocate( (mem_block_t*)((buff_t)ptr - BLOCK_HEADER_SIZE ) );
+	pthread_mutex_unlock(&malloc_lock);
+
 	return;
 }
 
@@ -48,29 +57,52 @@ void *realloc(void *ptr, size_t size)
 		return NULL;
 	}
 
-	mem_block_t *block = (mem_block_t *)((buff_t)ptr - BLOCK_HEADER_SIZE);
-	size = ALIGN(size);
+	pthread_mutex_lock(&malloc_lock);
 
-	if (block->user_data_size >= size )
+	mem_block_t *block = (mem_block_t *)((buff_t)ptr - BLOCK_HEADER_SIZE);
+
+	if (block->user_data_size >= ALIGN(size) )
 	{
-		return ptr;
+		zone_type_t new_zone_type = get_zone_type_from_size(size);
+		zone_type_t current_zone_type = block->belonging_zone->type;
+
+		if ( new_zone_type == current_zone_type )
+		{
+			block->requested_size = size;
+			pthread_mutex_unlock(&malloc_lock);
+			return ptr;
+		}
 	}
 
-	void *new_ptr = malloc(size);
-
+	void *new_ptr = block_allocate(size, get_zone_type_from_size(size));
+	
 	if (new_ptr == NULL)
-		return new_ptr;
+	{
+		pthread_mutex_unlock(&malloc_lock);
+		return NULL;
+	}
 
-	ft_memcpy(new_ptr, ptr, block->requested_size);
+	size_t copy_size = (block->requested_size < size) ? block->requested_size : size;
 
-	free(ptr);
+	ft_memcpy(new_ptr, ptr, copy_size);
 
-	return NULL;
+	block_deallocate( block );
+
+	pthread_mutex_unlock(&malloc_lock);
+
+	return new_ptr;
 }
 
 void show_alloc_mem(void)
 {
+	pthread_mutex_lock(&malloc_lock);
 	dump_memory();
+	pthread_mutex_unlock(&malloc_lock);
+}
 
-	return;
+void pretty_show_alloc_mem(void)
+{
+	pthread_mutex_lock(&malloc_lock);
+	pretty_dump_memory();
+	pthread_mutex_unlock(&malloc_lock);
 }

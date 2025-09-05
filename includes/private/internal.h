@@ -88,9 +88,6 @@ typedef zone_header_t          mem_zone_t;
 
 size_t get_page_size(void);
 size_t make_page_size_multiple(size_t size);
-void puthex_out(unsigned long n);
-void dump_block(mem_block_t *block);
-void dump_zone(mem_zone_t *zone);
 void dump_memory();
 
 /* HERE lies the globals */
@@ -102,5 +99,6 @@ typedef struct memory_zones_s
 } memory_zones_t;
 
 void dump_globals();
+void pretty_dump_memory();
 
 #endif /* INTERNAL_H */

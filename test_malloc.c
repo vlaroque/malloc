@@ -35,6 +35,8 @@ void *test_malloc_and_write(size_t size, char c)
 	void *ptr = malloc(size);
 	char *buff = ptr;
 
+	assert(ptr != NULL);
+
 	size_t i = 0;
 	while( i < size )
 	{
