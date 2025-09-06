@@ -72,7 +72,7 @@ void test_remove_ordored()
 		ptr[1] = test_malloc_and_write(20, 'b');
 		test_verify_and_free(ptr[0], 10, 'a');
 		test_verify_and_free(ptr[1], 20, 'b');
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 		i++;
 	}
 }
@@ -89,7 +89,7 @@ void test_remove_unordored()
 		ptr[1] = test_malloc_and_write(20, 'b');
 		test_verify_and_free(ptr[0], 10, 'a');
 		test_verify_and_free(ptr[1], 20, 'b');
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 		i++;
 	}
 }
@@ -106,17 +106,17 @@ void first_test()
 	ptr[2] = test_malloc_and_write(30, 'c');
 	ptr[3] = test_malloc_and_write(40, 'd');
 	ptr[4] = test_malloc_and_write(50, 'e');
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	test_verify_and_free(ptr[2], 30, 'c');
 	test_verify_and_free(ptr[3], 40, 'd');
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	ptr[2] = test_malloc_and_write(40, 'f');
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	test_verify_and_free(ptr[0], 10, 'a');
 	test_verify_and_free(ptr[1], 20, 'b');
 	test_verify_and_free(ptr[4], 50, 'e');
 	test_verify_and_free(ptr[2], 40, 'f');
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 }
 
 void test__alloc_even_dealloc(size_t size, int nbr_alloc)
@@ -131,19 +131,19 @@ void test__alloc_even_dealloc(size_t size, int nbr_alloc)
 	while ( i < nbr_alloc )
 	{
 		ptr[i] = test_malloc_and_write(size, (char)(i % 255));
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 		i++;
 	}
 
 	to_stdout(COLOR_RED "TEST 2 - allocated\n" COLOR_RESET);
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	to_stdout(COLOR_RED "TEST 2 - let's free\n" COLOR_RESET);
 
 	i = 1;
 	while ( i < nbr_alloc )
 	{
 		test_verify_and_free(ptr[i], size, (char)(i % 255) );
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 
 		i+=2;
 	}
@@ -152,11 +152,11 @@ void test__alloc_even_dealloc(size_t size, int nbr_alloc)
 	while ( i < nbr_alloc )
 	{
 		test_verify_and_free(ptr[i], size, (char)(i % 255) );
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 
 		i+=2;
 	}
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 }
 
 
@@ -172,12 +172,12 @@ void test__alloc_unorder_dealloc(size_t size, int nbr_alloc)
 	while ( i < nbr_alloc )
 	{
 		ptr[i] = test_malloc_and_write(size, (char)(i % 255));
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 		i++;
 	}
 
 	to_stdout(COLOR_RED "TEST 2 - allocated\n" COLOR_RESET);
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	to_stdout(COLOR_RED "TEST 2 - let's free\n" COLOR_RESET);
 
 	i -= 1;
@@ -185,11 +185,11 @@ void test__alloc_unorder_dealloc(size_t size, int nbr_alloc)
 	while ( i >= 0)
 	{
 		test_verify_and_free(ptr[i], size, (char)(i % 255) );
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 
 		i--;
 	}
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 }
 
 void test__alloc_order_dealloc(size_t size, int nbr_alloc)
@@ -204,12 +204,12 @@ void test__alloc_order_dealloc(size_t size, int nbr_alloc)
 	while ( i < nbr_alloc )
 	{
 		ptr[i] = test_malloc_and_write(size, (char)i % 254 );
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 		i++;
 	}
 
 	to_stdout(COLOR_RED "TEST 2 - allocated\n" COLOR_RESET);
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 	to_stdout(COLOR_RED "TEST 2 - let's free\n" COLOR_RESET);
 
 	i = 0;
@@ -217,11 +217,11 @@ void test__alloc_order_dealloc(size_t size, int nbr_alloc)
 	while ( i < nbr_alloc )
 	{
 		test_verify_and_free(ptr[i], size, (char)i % 254 );
-		show_alloc_mem();
+		pretty_show_alloc_mem();
 
 		i++;
 	}
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 }
 
 int main(void)
@@ -264,7 +264,7 @@ int main(void)
 	{
 		free(ptr[i]);
 	}
-	show_alloc_mem();
+	pretty_show_alloc_mem();
 
 	return 0;
 }

@@ -36,7 +36,6 @@ LIBFT_INCLUDES = $(LIBFT_DIR)/includes
 SRC = malloc.c \
 	zone.c\
 	block.c\
-	show_allocated_memory.c\
 	internal.c\
 	printing.c\
 	debug.c
@@ -113,8 +112,8 @@ show-hosttype:
 	@echo "Libft directory: $(LIBFT_DIR)"
 
 # Test target (if you have a test file)
-test: $(NAME)
-	$(CC) test_malloc.c -I$(INCLUDES_DIR) -L. -lft_malloc -o $(TEST_BIN)
+test: all
+	$(CC) test_malloc_ex.c -I$(INCLUDES_DIR) -L. -lft_malloc -o $(TEST_BIN) -g
 	LD_LIBRARY_PATH=. ./$(TEST_BIN)
 # Include dependency files
 -include $(DEPS)
